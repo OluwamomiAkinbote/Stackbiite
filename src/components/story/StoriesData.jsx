@@ -88,6 +88,14 @@ export const storiesData = [
         title: "Team Building",
         description: "Our quarterly team retreat and brainstorming session.",
       },
+      {
+        id: "M6_G2jK8L2R6p",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop",
+        duration: 5000,
+        title: "Team Building",
+        description: "Our quarterly team retreat and brainstorming session.",
+      }
     ],
   },
   {
