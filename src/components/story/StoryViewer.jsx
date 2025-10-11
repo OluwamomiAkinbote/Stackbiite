@@ -20,7 +20,7 @@ export default function StoryViewer({ story, onClose = () => {} }) {
   const media = story.media[currentIndex];
   const isVideo = media.type === 'video';
 
-  // Load likes
+  // Load likes from localStorage
   useEffect(() => {
     const storedLikes = parseInt(localStorage.getItem(`likes_${story.id}`)) || 0;
     const userLiked = localStorage.getItem(`userLiked_${story.id}`) === 'true';
@@ -99,7 +99,9 @@ export default function StoryViewer({ story, onClose = () => {} }) {
     setIsPlaying(!isPlaying);
   };
 
+  // Only respond to mouse clicks (not touch)
   const handleContainerClick = (e) => {
+    if (e.type === 'touchstart' || e.type === 'touchmove' || e.type === 'touchend') return;
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     if (clickX < rect.width / 3) prevMedia();
@@ -107,7 +109,7 @@ export default function StoryViewer({ story, onClose = () => {} }) {
     else if (isVideo) setIsPlaying((p) => !p);
   };
 
-  // Swipe handlers
+  // --- Swipe gestures ---
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -116,18 +118,21 @@ export default function StoryViewer({ story, onClose = () => {} }) {
     touchEndX.current = e.touches[0].clientX;
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e) => {
     const deltaX = touchEndX.current - touchStartX.current;
     if (Math.abs(deltaX) > 50) {
-      if (deltaX > 0) prevMedia(); // Swipe right -> previous
-      else nextMedia();             // Swipe left -> next
+      if (deltaX > 0) prevMedia(); // Swipe right
+      else nextMedia(); // Swipe left
+    } else {
+      // If it’s a tap (not swipe), toggle play/pause
+      if (isVideo) setIsPlaying((p) => !p);
     }
   };
 
   // Video & progress effect
   useEffect(() => {
     resetControls();
-    
+
     if (isVideo && videoRef.current) {
       if (isPlaying) {
         videoRef.current.play().catch(console.error);
@@ -148,7 +153,6 @@ export default function StoryViewer({ story, onClose = () => {} }) {
     setProgress(0);
   }, [currentIndex]);
 
-  // Video event handlers
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !isVideo) return;
@@ -171,9 +175,14 @@ export default function StoryViewer({ story, onClose = () => {} }) {
   }, [currentIndex, isVideo]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-2 sm:p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-2 sm:p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose(); // close only when clicking outside content
+      }}
+    >
       <div
-        className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden bg-black shadow-2xl flex items-center justify-center"
+        className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden bg-black shadow-2xl flex items-center justify-center touch-pan-y"
         onClick={handleContainerClick}
         onMouseMove={resetControls}
         onTouchStart={handleTouchStart}
