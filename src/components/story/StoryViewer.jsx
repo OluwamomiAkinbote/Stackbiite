@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, Play, Pause, Volume2, VolumeX, Share2, Heart, ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import { X, Play, Pause, Volume2, VolumeX, Share2, ChevronLeft, ChevronRight, Home, Eye, Link2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function StoryViewer({ story, onClose = () => {} }) {
@@ -9,8 +9,7 @@ export default function StoryViewer({ story, onClose = () => {} }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
-  const [likes, setLikes] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
+  const [views, setViews] = useState(0);
   const [showControls, setShowControls] = useState(true);
 
   const videoRef = useRef(null);
@@ -22,24 +21,27 @@ export default function StoryViewer({ story, onClose = () => {} }) {
   const isVideo = media.type === 'video';
   const isBackHome = media.isBackHome;
 
-  // Load stored likes
-  useEffect(() => {
-    const storedLikes = parseInt(localStorage.getItem(`likes_${story.id}_${media.id}`)) || 0;
-    const userLiked = localStorage.getItem(`userLiked_${story.id}_${media.id}`) === 'true';
-    setLikes(storedLikes);
-    setIsLiked(userLiked);
-  }, [story.id, media.id]);
-
-  const handleLike = (e) => {
-    e.stopPropagation();
-    if (!isLiked) {
-      const newLikes = likes + 1;
-      setLikes(newLikes);
-      setIsLiked(true);
-      localStorage.setItem(`likes_${story.id}_${media.id}`, newLikes.toString());
-      localStorage.setItem(`userLiked_${story.id}_${media.id}`, 'true');
+  const getDeviceId = () => {
+    let deviceId = localStorage.getItem('deviceId');
+    if (!deviceId) {
+      deviceId = btoa(navigator.userAgent + Date.now()).substring(0, 16);
+      localStorage.setItem('deviceId', deviceId);
     }
+    return deviceId;
   };
+
+  useEffect(() => {
+    const deviceId = getDeviceId();
+    const viewedDevices = JSON.parse(localStorage.getItem(`viewed_${story.id}_${media.id}`) || '[]');
+    let newViews = parseInt(localStorage.getItem(`views_${story.id}_${media.id}`) || '0');
+    if (!viewedDevices.includes(deviceId)) {
+      viewedDevices.push(deviceId);
+      localStorage.setItem(`viewed_${story.id}_${media.id}`, JSON.stringify(viewedDevices));
+      newViews += 1;
+      localStorage.setItem(`views_${story.id}_${media.id}`, newViews.toString());
+    }
+    setViews(newViews);
+  }, [story.id, media.id]);
 
   const handleShare = (e) => {
     e.stopPropagation();
@@ -81,12 +83,9 @@ export default function StoryViewer({ story, onClose = () => {} }) {
 
   const nextMedia = (e) => {
     if (e) e.stopPropagation();
-    if (currentIndex < story.media.length - 1) {
-      setCurrentIndex((i) => i + 1);
-    } else {
-      if (isBackHome) router.push('/');
-      else onClose();
-    }
+    if (currentIndex < story.media.length - 1) setCurrentIndex((i) => i + 1);
+    else if (isBackHome) router.push('/');
+    else onClose();
   };
 
   const prevMedia = (e) => {
@@ -121,9 +120,7 @@ export default function StoryViewer({ story, onClose = () => {} }) {
     if (isVideo && videoRef.current) {
       if (isPlaying) videoRef.current.play().catch(console.error);
       else videoRef.current.pause();
-    } else if (!isVideo && !isBackHome && isPlaying) {
-      startProgress();
-    }
+    } else if (!isVideo && !isBackHome && isPlaying) startProgress();
     return () => {
       stopProgress();
       if (controlsTimeout.current) clearTimeout(controlsTimeout.current);
@@ -182,8 +179,8 @@ export default function StoryViewer({ story, onClose = () => {} }) {
           >
             <div className="backdrop-blur-xl bg-black/40 rounded-3xl p-8 shadow-2xl animate-fadeIn">
               <Home className="w-12 h-12 mb-4 text-green-400 animate-bounce" />
-              <h2 className="text-2xl font-bold mb-3 tracking-wide">{media.title}</h2>
-              <p className="text-white/80 text-sm mb-6 leading-relaxed">{media.description}</p>
+              <h2 className="text-2xl font-bold mb-3 tracking-wide text-white">{media.title}</h2>
+              <p className="text-gray-200 text-sm mb-6 leading-relaxed">{media.description}</p>
               <Link
                 href={media.link || '/'}
                 onClick={onClose}
@@ -221,47 +218,57 @@ export default function StoryViewer({ story, onClose = () => {} }) {
                 {/* Header */}
                 <div className="flex justify-between items-center pointer-events-auto">
                   <img src={story.avatar} alt={story.title} className="w-9 h-9 rounded-full border-2 border-white" />
-                  <button onClick={handleClose} className="p-2 bg-white/10 rounded-full hover:bg-white/20 pointer-events-auto">
+                  <button
+                    onClick={handleClose}
+                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 pointer-events-auto"
+                  >
                     <X className="w-4 h-4 text-white" />
                   </button>
+                </div>
+
+                {/* Title & Description with Black Gradient */}
+                <div className="absolute bottom-24 left-0 right-0 px-4 py-3 bg-gradient-to-t from-black/80 to-transparent text-center rounded-t-xl pointer-events-none">
+                  <h2 className="text-lg font-bold mb-1 text-white">{media.title}</h2>
+                  {media.description && <p className="text-sm text-gray-200">{media.description}</p>}
+
+                  {/* Views, Share & Link */}
+                  <div className="flex justify-center items-center gap-2 mt-2 pointer-events-auto">
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-600 text-white text-xs">
+                      <Eye className="w-3 h-3" />
+                      <span>{views}</span>
+                    </div>
+
+                    <button
+                      onClick={handleShare}
+                      className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-600 text-white text-xs"
+                    >
+                      <Share2 className="w-3 h-3" />
+                      <span>Share</span>
+                    </button>
+
+                    {media.link && (
+                      <Link
+                        href={media.link}
+                        className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-600 text-white text-xs"
+                      >
+                        <Link2 className="w-3 h-3" />
+                        <span>{media.linkText || 'Link'}</span>
+                      </Link>
+                    )}
+                  </div>
                 </div>
 
                 {/* Center Play/Pause for videos */}
                 {isVideo && (
                   <div className="flex justify-center items-center pointer-events-auto">
-                    <button onClick={togglePlayPause} className="p-4 rounded-full bg-purple-600 hover:bg-purple-700">
+                    <button
+                      onClick={togglePlayPause}
+                      className="p-4 rounded-full bg-purple-600 hover:bg-purple-700"
+                    >
                       {isPlaying ? <Pause className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white ml-1" />}
                     </button>
                   </div>
                 )}
-
-                {/* Bottom Controls */}
-                <div className="flex justify-between items-center pointer-events-auto">
-                  <button
-                    onClick={handleLike}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
-                      isLiked ? 'bg-gradient-to-r from-pink-500 to-rose-500' : 'bg-white/10 hover:bg-white/20'
-                    }`}
-                  >
-                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                    <span>{likes}</span>
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    <span>Share</span>
-                  </button>
-                  {isVideo && (
-                    <button
-                      onClick={toggleMute}
-                      className="p-3 rounded-full bg-white/20 hover:bg-white/30"
-                    >
-                      {isMuted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-white" />}
-                    </button>
-                  )}
-                </div>
               </div>
 
               {/* Navigation */}
