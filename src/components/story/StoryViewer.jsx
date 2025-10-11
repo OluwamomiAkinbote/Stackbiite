@@ -226,35 +226,45 @@ export default function StoryViewer({ story, onClose = () => {} }) {
                   </button>
                 </div>
 
-                {/* Title & Description with Black Gradient */}
-                <div className="absolute bottom-24 left-0 right-0 px-4 py-3 bg-gradient-to-t from-black/80 to-transparent text-center rounded-t-xl pointer-events-none">
-                  <h2 className="text-lg font-bold mb-1 text-white">{media.title}</h2>
-                  {media.description && <p className="text-sm text-gray-200">{media.description}</p>}
-
-                  {/* Views, Share & Link */}
-                  <div className="flex justify-center items-center gap-2 mt-2 pointer-events-auto">
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-600 text-white text-xs">
-                      <Eye className="w-3 h-3" />
-                      <span>{views}</span>
+                {/* Content Area with Left-Aligned Gradient */}
+                <div className="absolute bottom-0 left-0 right-0 pt-8 pb-6 px-4 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
+                  <div className="max-w-full text-left">
+                    {/* Title & Description */}
+                    <div className="mb-4">
+                      <h2 className="text-xl font-bold text-white mb-2 leading-tight">{media.title}</h2>
+                      {media.description && (
+                        <p className="text-gray-200 text-sm leading-relaxed">{media.description}</p>
+                      )}
                     </div>
 
-                    <button
-                      onClick={handleShare}
-                      className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-600 text-white text-xs"
-                    >
-                      <Share2 className="w-3 h-3" />
-                      <span>Share</span>
-                    </button>
+                    {/* Action Buttons - Clean Design */}
+                    <div className="flex items-center gap-3 pointer-events-auto">
+                      {/* Views */}
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20">
+                        <Eye className="w-4 h-4 text-white" />
+                        <span className="text-white text-sm font-medium">{views}</span>
+                      </div>
 
-                    {media.link && (
-                      <Link
-                        href={media.link}
-                        className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-600 text-white text-xs"
+                      {/* Share */}
+                      <button
+                        onClick={handleShare}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 hover:bg-white/10 transition-colors"
                       >
-                        <Link2 className="w-3 h-3" />
-                        <span>{media.linkText || 'Link'}</span>
-                      </Link>
-                    )}
+                        <Share2 className="w-4 h-4 text-white" />
+                        <span className="text-white text-sm font-medium">Share</span>
+                      </button>
+
+                      {/* Link */}
+                      {media.link && (
+                        <Link
+                          href={media.link}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 hover:bg-white/10 transition-colors"
+                        >
+                          <Link2 className="w-4 h-4 text-white" />
+                          <span className="text-white text-sm font-medium">{media.linkText || 'Visit'}</span>
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -263,9 +273,13 @@ export default function StoryViewer({ story, onClose = () => {} }) {
                   <div className="flex justify-center items-center pointer-events-auto">
                     <button
                       onClick={togglePlayPause}
-                      className="p-4 rounded-full bg-purple-600 hover:bg-purple-700"
+                      className="p-4 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
                     >
-                      {isPlaying ? <Pause className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white ml-1" />}
+                      {isPlaying ? (
+                        <Pause className="w-6 h-6 text-white" />
+                      ) : (
+                        <Play className="w-6 h-6 text-white ml-1" />
+                      )}
                     </button>
                   </div>
                 )}
