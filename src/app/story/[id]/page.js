@@ -1,21 +1,12 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import StoryViewer from '@/components/story/StoryViewer';
-import { storiesData } from '@/components/story/StoriesData';
+import { storiesWithPreview } from '@/components/story/StoriesData';
 
 export default function StoryPage({ params }) {
-  const { id } = params; // No need for use(params)
+  const { id } = params;
 
-  const router = useRouter();
-  const [story, setStory] = useState(null);
-
-  useEffect(() => {
-    const foundStory = storiesData.find((s) => s.id === id);
-    if (foundStory) setStory(foundStory);
-  }, [id]);
+  // Find story server-side
+  const story = storiesWithPreview.find((s) => s.id === id);
 
   if (!story) {
     return (
@@ -25,7 +16,6 @@ export default function StoryPage({ params }) {
     );
   }
 
-  // SEO image fallback
   const seoImage =
     story.seoImage ||
     story.media?.find((m) => m.type === 'image')?.url ||
@@ -51,14 +41,7 @@ export default function StoryPage({ params }) {
         <meta property="twitter:image" content={seoImage} />
       </Head>
 
-      {/* Story Viewer */}
-      <StoryViewer
-        story={story}
-        onClose={() => {
-          // Navigate to Back Home
-          router.push('/');
-        }}
-      />
+      <StoryViewer story={story} onClose={() => {}} />
     </>
   );
 }
