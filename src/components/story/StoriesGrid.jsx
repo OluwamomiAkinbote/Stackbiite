@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { storiesData } from './StoriesData';
+import { storiesWithPreview } from './StoriesData'; // ✅ use the enhanced dataset
 import StoryViewer from './StoryViewer';
 
 export default function StoriesGrid() {
@@ -28,7 +28,7 @@ export default function StoriesGrid() {
           </p>
         </div>
 
-        {/* Scroll Controllers (visible on small screens) */}
+        {/* Scroll Buttons */}
         <button
           onClick={() => scroll('left')}
           className="absolute left-0 top-1/2 -translate-y-1/2 bg-purple-600 text-white rounded-full shadow-md p-2 hidden sm:flex hover:bg-purple-700 transition"
@@ -42,12 +42,12 @@ export default function StoriesGrid() {
           <ChevronRight size={22} />
         </button>
 
-        {/* Horizontal Story Bar */}
+        {/* Story List */}
         <div
           ref={scrollRef}
           className="flex gap-4 sm:gap-5 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory px-2 sm:px-4"
         >
-          {storiesData.map((story) => {
+          {storiesWithPreview.map((story) => {
             const firstMedia = story.media[0];
             const previewUrl = firstMedia?.url;
 
@@ -82,7 +82,7 @@ export default function StoriesGrid() {
                     {story.avatar && (
                       <img
                         src={story.avatar}
-                        alt=""
+                        alt="avatar"
                         className="w-3 h-3 sm:w-4 sm:h-4 object-contain filter brightness-0 invert"
                       />
                     )}
@@ -98,9 +98,12 @@ export default function StoriesGrid() {
           })}
         </div>
 
-        {/* Fullscreen Story Viewer */}
+        {/* Story Viewer */}
         {selectedStory && (
-          <StoryViewer story={selectedStory} onClose={() => setSelectedStory(null)} />
+          <StoryViewer
+            story={selectedStory}
+            onClose={() => setSelectedStory(null)}
+          />
         )}
       </div>
     </section>

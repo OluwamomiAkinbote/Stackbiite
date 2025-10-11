@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Head from 'next/head';
 import StoryViewer from '@/components/story/StoryViewer';
 import { storiesData } from '@/components/story/StoriesData';
 
 export default function StoryPage({ params }) {
-  const resolvedParams = use(params); // unwrap the promise
-  const { id } = resolvedParams;
+  const { id } = params; // No need for use(params)
 
   const router = useRouter();
   const [story, setStory] = useState(null);
@@ -25,10 +25,40 @@ export default function StoryPage({ params }) {
     );
   }
 
+  // SEO image fallback
+  const seoImage =
+    story.seoImage ||
+    story.media?.find((m) => m.type === 'image')?.url ||
+    '/images/seo-professional.jpg';
+
   return (
-    <StoryViewer
-      story={story}
-      onClose={() => router.push('/')} // Return to home after viewing
-    />
+    <>
+      <Head>
+        <title>{story.title} | Stories</title>
+        <meta
+          name="description"
+          content={story.description || 'Professional story insights and updates.'}
+        />
+        <meta property="og:title" content={story.title} />
+        <meta
+          property="og:description"
+          content={story.description || 'Explore engaging stories and visual updates.'}
+        />
+        <meta property="og:image" content={seoImage} />
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:title" content={story.title} />
+        <meta property="twitter:description" content={story.description || ''} />
+        <meta property="twitter:image" content={seoImage} />
+      </Head>
+
+      {/* Story Viewer */}
+      <StoryViewer
+        story={story}
+        onClose={() => {
+          // Navigate to Back Home
+          router.push('/');
+        }}
+      />
+    </>
   );
 }

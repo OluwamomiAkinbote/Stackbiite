@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { X, Play, Pause, Volume2, VolumeX, Share2, Heart } from 'lucide-react';
+import Link from 'next/link';
+import { X, Play, Pause, Volume2, VolumeX, Share2, Heart, ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function StoryViewer({ story, onClose = () => {} }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -14,19 +16,19 @@ export default function StoryViewer({ story, onClose = () => {} }) {
   const videoRef = useRef(null);
   const progressInterval = useRef(null);
   const controlsTimeout = useRef(null);
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+  const router = useRouter();
 
   const media = story.media[currentIndex];
   const isVideo = media.type === 'video';
+  const isBackHome = media.isBackHome;
 
-  // Load likes from localStorage
+  // Load stored likes
   useEffect(() => {
-    const storedLikes = parseInt(localStorage.getItem(`likes_${story.id}`)) || 0;
-    const userLiked = localStorage.getItem(`userLiked_${story.id}`) === 'true';
+    const storedLikes = parseInt(localStorage.getItem(`likes_${story.id}_${media.id}`)) || 0;
+    const userLiked = localStorage.getItem(`userLiked_${story.id}_${media.id}`) === 'true';
     setLikes(storedLikes);
     setIsLiked(userLiked);
-  }, [story.id]);
+  }, [story.id, media.id]);
 
   const handleLike = (e) => {
     e.stopPropagation();
@@ -34,8 +36,8 @@ export default function StoryViewer({ story, onClose = () => {} }) {
       const newLikes = likes + 1;
       setLikes(newLikes);
       setIsLiked(true);
-      localStorage.setItem(`likes_${story.id}`, newLikes.toString());
-      localStorage.setItem(`userLiked_${story.id}`, 'true');
+      localStorage.setItem(`likes_${story.id}_${media.id}`, newLikes.toString());
+      localStorage.setItem(`userLiked_${story.id}_${media.id}`, 'true');
     }
   };
 
@@ -77,12 +79,18 @@ export default function StoryViewer({ story, onClose = () => {} }) {
     if (progressInterval.current) clearInterval(progressInterval.current);
   };
 
-  const nextMedia = () => {
-    if (currentIndex < story.media.length - 1) setCurrentIndex((i) => i + 1);
-    else onClose();
+  const nextMedia = (e) => {
+    if (e) e.stopPropagation();
+    if (currentIndex < story.media.length - 1) {
+      setCurrentIndex((i) => i + 1);
+    } else {
+      if (isBackHome) router.push('/');
+      else onClose();
+    }
   };
 
-  const prevMedia = () => {
+  const prevMedia = (e) => {
+    if (e) e.stopPropagation();
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
   };
 
@@ -96,78 +104,41 @@ export default function StoryViewer({ story, onClose = () => {} }) {
 
   const togglePlayPause = (e) => {
     e.stopPropagation();
+    if (isVideo && videoRef.current) {
+      if (isPlaying) videoRef.current.pause();
+      else videoRef.current.play().catch(console.error);
+    }
     setIsPlaying(!isPlaying);
   };
 
-  // Only respond to mouse clicks (not touch)
-  const handleContainerClick = (e) => {
-    if (e.type === 'touchstart' || e.type === 'touchmove' || e.type === 'touchend') return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    if (clickX < rect.width / 3) prevMedia();
-    else if (clickX > (rect.width * 2) / 3) nextMedia();
-    else if (isVideo) setIsPlaying((p) => !p);
+  const handleBackgroundClick = (e) => {
+    if (e.target === e.currentTarget) onClose();
   };
 
-  // --- Swipe gestures ---
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e) => {
-    const deltaX = touchEndX.current - touchStartX.current;
-    if (Math.abs(deltaX) > 50) {
-      if (deltaX > 0) prevMedia(); // Swipe right
-      else nextMedia(); // Swipe left
-    } else {
-      // If it’s a tap (not swipe), toggle play/pause
-      if (isVideo) setIsPlaying((p) => !p);
-    }
-  };
-
-  // Video & progress effect
   useEffect(() => {
     resetControls();
-
+    setProgress(0);
     if (isVideo && videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.play().catch(console.error);
-      } else {
-        videoRef.current.pause();
-      }
-    } else if (!isVideo && isPlaying) {
+      if (isPlaying) videoRef.current.play().catch(console.error);
+      else videoRef.current.pause();
+    } else if (!isVideo && !isBackHome && isPlaying) {
       startProgress();
     }
-
     return () => {
       stopProgress();
       if (controlsTimeout.current) clearTimeout(controlsTimeout.current);
     };
-  }, [currentIndex, isPlaying, isVideo]);
-
-  useEffect(() => {
-    setProgress(0);
-  }, [currentIndex]);
+  }, [currentIndex, isPlaying]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !isVideo) return;
-
     const handleVideoEnd = () => nextMedia();
     const handleTimeUpdate = () => {
-      if (video.duration) {
-        const newProgress = (video.currentTime / video.duration) * 100;
-        setProgress(newProgress);
-      }
+      if (video.duration) setProgress((video.currentTime / video.duration) * 100);
     };
-
     video.addEventListener('ended', handleVideoEnd);
     video.addEventListener('timeupdate', handleTimeUpdate);
-
     return () => {
       video.removeEventListener('ended', handleVideoEnd);
       video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -177,98 +148,145 @@ export default function StoryViewer({ story, onClose = () => {} }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-2 sm:p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose(); // close only when clicking outside content
-      }}
+      onClick={handleBackgroundClick}
     >
       <div
-        className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden bg-black shadow-2xl flex items-center justify-center touch-pan-y"
-        onClick={handleContainerClick}
+        className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden bg-black shadow-2xl flex items-center justify-center"
         onMouseMove={resetControls}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         {/* Progress Bars */}
-        <div className={`absolute top-3 left-3 right-3 flex gap-1 z-30 transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
-          {story.media.map((_, i) => (
-            <div key={i} className="h-0.5 bg-white/30 flex-1 rounded-full">
-              <div
-                className="h-full bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 transition-all"
-                style={{ width: i < currentIndex ? '100%' : i === currentIndex ? `${progress}%` : '0%' }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Header */}
-        <div className={`absolute top-5 left-3 right-3 flex justify-between items-center z-30 transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-lg">🎥</div>
-            <div>
-              <p className="text-white text-sm font-semibold">{story.title}</p>
-              <p className="text-white/50 text-xs">{currentIndex + 1} of {story.media.length}</p>
-            </div>
-          </div>
-          <button onClick={handleClose} className="p-2 bg-white/10 rounded-full hover:bg-white/20">
-            <X className="w-4 h-4 text-white" />
-          </button>
-        </div>
-
-        {/* Media */}
-        {isVideo ? (
-          <video 
-            ref={videoRef} 
-            src={media.url} 
-            className="w-full h-full object-contain" 
-            muted={isMuted} 
-            playsInline 
-            loop={false}
-          />
-        ) : (
-          <img src={media.url} alt={media.title} className="w-full h-full object-contain" />
-        )}
-
-        {/* Bottom Controls */}
-        <div className={`absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/70 to-transparent transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
-          <h3 className="text-white text-base font-semibold">{media.title}</h3>
-          {media.description && <p className="text-white/60 text-xs mb-3">{media.description}</p>}
-
-          <div className="flex items-center gap-3 text-white text-sm">
-            <button
-              onClick={handleLike}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isLiked ? 'bg-gradient-to-r from-pink-500 to-rose-500' : 'bg-white/10 hover:bg-white/20'}`}
-            >
-              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-              <span>{likes}</span>
-            </button>
-            <button onClick={handleShare} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20">
-              <Share2 className="w-4 h-4" />
-              <span>Share</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Center Play/Pause */}
-        {isVideo && (
-          <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
-            <button
-              onClick={togglePlayPause}
-              className="p-4 rounded-full bg-purple-600 hover:bg-purple-700 transition-all"
-            >
-              {isPlaying ? <Pause className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white ml-1" />}
-            </button>
-          </div>
-        )}
-
-        {/* Mute Button */}
-        {isVideo && (
-          <button
-            onClick={toggleMute}
-            className={`absolute bottom-24 right-4 p-3 rounded-full bg-white/20 hover:bg-white/30 transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}
+        {!isBackHome && (
+          <div
+            className={`absolute top-3 left-3 right-3 flex gap-1 z-30 transition-opacity ${
+              showControls ? 'opacity-100' : 'opacity-0'
+            }`}
           >
-            {isMuted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-white" />}
-          </button>
+            {story.media.map((_, i) => (
+              <div key={i} className="h-0.5 bg-white/30 flex-1 rounded-full">
+                <div
+                  className="h-full bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 transition-all"
+                  style={{
+                    width: i < currentIndex ? '100%' : i === currentIndex ? `${progress}%` : '0%',
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Back Home Slide */}
+        {isBackHome ? (
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-6"
+            style={{ backgroundImage: `url(${media.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+          >
+            <div className="backdrop-blur-xl bg-black/40 rounded-3xl p-8 shadow-2xl animate-fadeIn">
+              <Home className="w-12 h-12 mb-4 text-green-400 animate-bounce" />
+              <h2 className="text-2xl font-bold mb-3 tracking-wide">{media.title}</h2>
+              <p className="text-white/80 text-sm mb-6 leading-relaxed">{media.description}</p>
+              <Link
+                href={media.link || '/'}
+                onClick={onClose}
+                className="inline-block px-6 py-3 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-black font-semibold hover:scale-105 hover:from-green-300 transition-all"
+              >
+                {media.linkText || '← Back to Home'}
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Media */}
+            <div className="relative w-full h-full flex items-center justify-center">
+              {isVideo ? (
+                <video
+                  ref={videoRef}
+                  src={media.url}
+                  className="w-full h-full object-contain"
+                  muted={isMuted}
+                  playsInline
+                  loop={false}
+                  onClick={nextMedia}
+                />
+              ) : (
+                <img
+                  src={media.url}
+                  alt={media.title}
+                  className="w-full h-full object-contain"
+                  onClick={nextMedia}
+                />
+              )}
+
+              {/* Overlay Controls */}
+              <div className="absolute inset-0 flex flex-col justify-between p-4 pointer-events-none">
+                {/* Header */}
+                <div className="flex justify-between items-center pointer-events-auto">
+                  <img src={story.avatar} alt={story.title} className="w-9 h-9 rounded-full border-2 border-white" />
+                  <button onClick={handleClose} className="p-2 bg-white/10 rounded-full hover:bg-white/20 pointer-events-auto">
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+
+                {/* Center Play/Pause for videos */}
+                {isVideo && (
+                  <div className="flex justify-center items-center pointer-events-auto">
+                    <button onClick={togglePlayPause} className="p-4 rounded-full bg-purple-600 hover:bg-purple-700">
+                      {isPlaying ? <Pause className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white ml-1" />}
+                    </button>
+                  </div>
+                )}
+
+                {/* Bottom Controls */}
+                <div className="flex justify-between items-center pointer-events-auto">
+                  <button
+                    onClick={handleLike}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
+                      isLiked ? 'bg-gradient-to-r from-pink-500 to-rose-500' : 'bg-white/10 hover:bg-white/20'
+                    }`}
+                  >
+                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                    <span>{likes}</span>
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>Share</span>
+                  </button>
+                  {isVideo && (
+                    <button
+                      onClick={toggleMute}
+                      className="p-3 rounded-full bg-white/20 hover:bg-white/30"
+                    >
+                      {isMuted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-white" />}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Navigation */}
+              {story.media.length > 1 && (
+                <>
+                  {currentIndex > 0 && (
+                    <button
+                      onClick={prevMedia}
+                      className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md p-2 sm:p-3 rounded-full transition-all z-40 pointer-events-auto"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                  )}
+                  {currentIndex < story.media.length - 1 && (
+                    <button
+                      onClick={nextMedia}
+                      className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md p-2 sm:p-3 rounded-full transition-all z-40 pointer-events-auto"
+                    >
+                      <ChevronRight className="w-6 h-6 text-white" />
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
