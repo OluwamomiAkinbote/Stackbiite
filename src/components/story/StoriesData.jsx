@@ -15,8 +15,8 @@ export const storiesData = [
   {
     id: "S1_B1c9k2L8eQ3x",
     title: "Project Launch",
-    avatar: "https://images.unsplash.com/photo-1612831455540-6f63b0c162d8?w=100&h=100&fit=crop", // updated avatar
-    seoImage: "https://images.unsplash.com/photo-1581093588401-22f1f58b4e3e?w=1200&h=630&fit=crop",
+    avatar: "https://unsplash.com/photos/a-red-and-white-rocket-ship-flying-through-the-sky-O1jUvZX9DOA", // updated avatar
+    seoImage: "https://boltzmann.s3.us-east-1.amazonaws.com/Abstract/free-delivery.jpg",
     media: [
       {
         id: "M1_B4f9L0K2vZx",

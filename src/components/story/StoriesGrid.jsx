@@ -42,7 +42,7 @@ const colorThemes = {
 
 export default function ModernStoriesGrid() {
   const [selectedStory, setSelectedStory] = useState(null);
-  const [currentTheme, setCurrentTheme] = useState('modern');
+  const [currentTheme, setCurrentTheme] = useState('professional');
   const [showScrollButtons, setShowScrollButtons] = useState(false);
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const scrollRef = useRef(null);
