@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, Play, Pause, Volume2, VolumeX, Share2, ChevronLeft, ChevronRight, Home, Eye, Link2 } from 'lucide-react';
+import { X, Play, Pause, Share2, ChevronLeft, ChevronRight, Home, Eye, Link2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function StoryViewer({ story, onClose = () => {} }) {
@@ -55,7 +55,7 @@ export default function StoryViewer({ story, onClose = () => {} }) {
   };
 
   const handleClose = (e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     onClose();
   };
 
@@ -78,31 +78,34 @@ export default function StoryViewer({ story, onClose = () => {} }) {
   };
 
   const stopProgress = () => {
-    if (progressInterval.current) clearInterval(progressInterval.current);
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+      progressInterval.current = null;
+    }
   };
 
   const nextMedia = (e) => {
     if (e) e.stopPropagation();
-    if (currentIndex < story.media.length - 1) setCurrentIndex((i) => i + 1);
-    else if (isBackHome) router.push('/');
-    else onClose();
+    if (currentIndex < story.media.length - 1) {
+      setCurrentIndex((i) => i + 1);
+      setProgress(0);
+    } else if (isBackHome) {
+      router.push('/');
+    } else {
+      onClose();
+    }
   };
 
   const prevMedia = (e) => {
     if (e) e.stopPropagation();
-    if (currentIndex > 0) setCurrentIndex((i) => i - 1);
-  };
-
-  const toggleMute = (e) => {
-    e.stopPropagation();
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
+    if (currentIndex > 0) {
+      setCurrentIndex((i) => i - 1);
+      setProgress(0);
     }
   };
 
   const togglePlayPause = (e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     if (isVideo && videoRef.current) {
       if (isPlaying) videoRef.current.pause();
       else videoRef.current.play().catch(console.error);
@@ -114,33 +117,53 @@ export default function StoryViewer({ story, onClose = () => {} }) {
     if (e.target === e.currentTarget) onClose();
   };
 
+  // Handle media playback and progress
   useEffect(() => {
     resetControls();
     setProgress(0);
+    
     if (isVideo && videoRef.current) {
-      if (isPlaying) videoRef.current.play().catch(console.error);
-      else videoRef.current.pause();
-    } else if (!isVideo && !isBackHome && isPlaying) startProgress();
+      if (isPlaying) {
+        videoRef.current.play().catch(console.error);
+      } else {
+        videoRef.current.pause();
+      }
+    } else if (!isVideo && !isBackHome && isPlaying) {
+      startProgress();
+    }
+    
     return () => {
       stopProgress();
-      if (controlsTimeout.current) clearTimeout(controlsTimeout.current);
     };
   }, [currentIndex, isPlaying]);
 
+  // Handle video events
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !isVideo) return;
+
     const handleVideoEnd = () => nextMedia();
     const handleTimeUpdate = () => {
-      if (video.duration) setProgress((video.currentTime / video.duration) * 100);
+      if (video.duration) {
+        setProgress((video.currentTime / video.duration) * 100);
+      }
     };
+
     video.addEventListener('ended', handleVideoEnd);
     video.addEventListener('timeupdate', handleTimeUpdate);
+    
     return () => {
       video.removeEventListener('ended', handleVideoEnd);
       video.removeEventListener('timeupdate', handleTimeUpdate);
     };
   }, [currentIndex, isVideo]);
+
+  // Cleanup timeouts
+  useEffect(() => {
+    return () => {
+      if (controlsTimeout.current) clearTimeout(controlsTimeout.current);
+    };
+  }, []);
 
   return (
     <div
@@ -150,18 +173,19 @@ export default function StoryViewer({ story, onClose = () => {} }) {
       <div
         className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden bg-black shadow-2xl flex items-center justify-center"
         onMouseMove={resetControls}
+        onTouchMove={resetControls}
       >
-        {/* Progress Bars */}
+        {/* Progress Bars - Only show for non-backhome slides */}
         {!isBackHome && (
           <div
-            className={`absolute top-3 left-3 right-3 flex gap-1 z-30 transition-opacity ${
+            className={`absolute top-3 left-3 right-3 flex gap-1 z-30 transition-opacity duration-300 ${
               showControls ? 'opacity-100' : 'opacity-0'
             }`}
           >
             {story.media.map((_, i) => (
-              <div key={i} className="h-0.5 bg-white/30 flex-1 rounded-full">
+              <div key={i} className="h-1 bg-white/30 flex-1 rounded-full">
                 <div
-                  className="h-full bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 transition-all"
+                  className="h-full bg-white transition-all duration-100 rounded-full"
                   style={{
                     width: i < currentIndex ? '100%' : i === currentIndex ? `${progress}%` : '0%',
                   }}
@@ -177,14 +201,14 @@ export default function StoryViewer({ story, onClose = () => {} }) {
             className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-6"
             style={{ backgroundImage: `url(${media.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
           >
-            <div className="backdrop-blur-xl bg-black/40 rounded-3xl p-8 shadow-2xl animate-fadeIn">
-              <Home className="w-12 h-12 mb-4 text-green-400 animate-bounce" />
+            <div className="backdrop-blur-xl bg-black/40 rounded-3xl p-8 shadow-2xl">
+              <Home className="w-12 h-12 mb-4 text-green-400" />
               <h2 className="text-2xl font-bold mb-3 tracking-wide text-white">{media.title}</h2>
               <p className="text-gray-200 text-sm mb-6 leading-relaxed">{media.description}</p>
               <Link
                 href={media.link || '/'}
-                onClick={onClose}
-                className="inline-block px-6 py-3 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-black font-semibold hover:scale-105 hover:from-green-300 transition-all"
+                onClick={handleClose}
+                className="inline-block px-6 py-3 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-black font-semibold hover:scale-105 transition-transform"
               >
                 {media.linkText || '← Back to Home'}
               </Link>
@@ -217,19 +241,21 @@ export default function StoryViewer({ story, onClose = () => {} }) {
               <div className="absolute inset-0 flex flex-col justify-between p-4 pointer-events-none">
                 {/* Header */}
                 <div className="flex justify-between items-center pointer-events-auto">
-                  <img src={story.avatar} alt={story.title} className="w-9 h-9 rounded-full border-2 border-white" />
+                  <div className="flex items-center gap-3">
+                    <img src={story.avatar} alt={story.title} className="w-9 h-9 rounded-full border-2 border-white" />
+                    <span className="text-white font-semibold">{story.title}</span>
+                  </div>
                   <button
                     onClick={handleClose}
-                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 pointer-events-auto"
+                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
                   >
-                    <X className="w-4 h-4 text-white" />
+                    <X className="w-5 h-5 text-white" />
                   </button>
                 </div>
 
-                {/* Content Area with Left-Aligned Gradient */}
+                {/* Content Area */}
                 <div className="absolute bottom-0 left-0 right-0 pt-8 pb-6 px-4 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
                   <div className="max-w-full text-left">
-                    {/* Title & Description */}
                     <div className="mb-4">
                       <h2 className="text-xl font-bold text-white mb-2 leading-tight">{media.title}</h2>
                       {media.description && (
@@ -237,15 +263,13 @@ export default function StoryViewer({ story, onClose = () => {} }) {
                       )}
                     </div>
 
-                    {/* Action Buttons - Clean Design */}
+                    {/* Action Buttons */}
                     <div className="flex items-center gap-3 pointer-events-auto">
-                      {/* Views */}
                       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20">
                         <Eye className="w-4 h-4 text-white" />
                         <span className="text-white text-sm font-medium">{views}</span>
                       </div>
 
-                      {/* Share */}
                       <button
                         onClick={handleShare}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 hover:bg-white/10 transition-colors"
@@ -254,7 +278,6 @@ export default function StoryViewer({ story, onClose = () => {} }) {
                         <span className="text-white text-sm font-medium">Share</span>
                       </button>
 
-                      {/* Link */}
                       {media.link && (
                         <Link
                           href={media.link}
@@ -268,7 +291,7 @@ export default function StoryViewer({ story, onClose = () => {} }) {
                   </div>
                 </div>
 
-                {/* Center Play/Pause for videos */}
+                {/* Play/Pause Button for videos */}
                 {isVideo && (
                   <div className="flex justify-center items-center pointer-events-auto">
                     <button
@@ -285,13 +308,13 @@ export default function StoryViewer({ story, onClose = () => {} }) {
                 )}
               </div>
 
-              {/* Navigation */}
+              {/* Navigation Arrows */}
               {story.media.length > 1 && (
                 <>
                   {currentIndex > 0 && (
                     <button
                       onClick={prevMedia}
-                      className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md p-2 sm:p-3 rounded-full transition-all z-40 pointer-events-auto"
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md p-3 rounded-full transition-all z-40 pointer-events-auto"
                     >
                       <ChevronLeft className="w-6 h-6 text-white" />
                     </button>
@@ -299,7 +322,7 @@ export default function StoryViewer({ story, onClose = () => {} }) {
                   {currentIndex < story.media.length - 1 && (
                     <button
                       onClick={nextMedia}
-                      className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md p-2 sm:p-3 rounded-full transition-all z-40 pointer-events-auto"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md p-3 rounded-full transition-all z-40 pointer-events-auto"
                     >
                       <ChevronRight className="w-6 h-6 text-white" />
                     </button>
