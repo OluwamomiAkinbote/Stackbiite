@@ -45,7 +45,7 @@ export default function StoryViewer({ story, onClose = () => {} }) {
 
   const handleShare = (e) => {
     e.stopPropagation();
-    const shareUrl = `${window.location.origin}/story/${story.id}`;
+    const shareUrl = `${window.location.origin}/stories/${story.id}`;
     if (navigator.share) {
       navigator.share({ title: story.title, text: media.description || '', url: shareUrl }).catch(() => {});
     } else {

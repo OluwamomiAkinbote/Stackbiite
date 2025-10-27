@@ -1,5 +1,7 @@
 import "./globals.css";
 import { ThemeProvider } from '@/components/home/ThemeContext';
+import ClientLayout from './ClientLayout'; // ✅ import client wrapper
+
 export const metadata = {
   title: {
     default: "Stackbiite - Web Design & Development Agency",
@@ -11,9 +13,7 @@ export const metadata = {
   creator: "Stackbiite",
   publisher: "Stackbiite",
   metadataBase: new URL('https://stackbiite.com'),
-  alternates: {
-    canonical: '/',
-  },
+  alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -48,13 +48,7 @@ export const metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    // Add your verification codes here when available
-    // google: 'your-google-verification-code',
-    // yandex: 'your-yandex-verification-code',
-    // yahoo: 'your-yahoo-verification-code',
-  },
-}
+};
 
 export default function RootLayout({ children }) {
   return (
@@ -68,7 +62,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="font-poppins">
         <ThemeProvider>
-          {children}
+          <ClientLayout>{children}</ClientLayout>
         </ThemeProvider>
       </body>
     </html>

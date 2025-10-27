@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Play, Image } from 'lucide-react';
 import { useTheme } from '@/components/home/ThemeContext';
-import { storiesWithPreview } from './StoriesData';
-import StoryViewer from './StoryViewer';
+import { storiesWithPreview } from '@/components/story/StoriesData';
 
 export default function ModernStoriesGrid() {
-  const [selectedStory, setSelectedStory] = useState(null);
-  const [showScrollButtons, setShowScrollButtons] = useState(false);
   const scrollRef = useRef(null);
   const { theme } = useTheme();
+  const [showScrollButtons, setShowScrollButtons] = useState(false);
 
+  // Check if scroll buttons are needed
   useEffect(() => {
     const checkScroll = () => {
       const container = scrollRef.current;
@@ -40,7 +40,7 @@ export default function ModernStoriesGrid() {
 
   return (
     <section className={`py-12 lg:py-16 ${theme.secondary} transition-colors duration-300`}>
-      <div className="container mx-auto px-4 max-w-7xl relative ">
+      <div className="container mx-auto px-4 max-w-7xl relative">
         <div className="text-center mb-10 lg:mb-12 mt-24">
           <h2 className={`text-3xl lg:text-5xl font-bold ${theme.text} mb-3`}>Latest Stories</h2>
           <p className="text-base lg:text-lg text-gray-600 max-w-2xl mx-auto">
@@ -74,25 +74,37 @@ export default function ModernStoriesGrid() {
             const mediaCount = story.media.length;
 
             return (
-              <div
+              <Link
                 key={story.id}
-                onClick={() => setSelectedStory(story)}
-                className="flex flex-col items-center cursor-pointer group shrink-0 transition-all hover:scale-105"
+                href={`/stories/${story.id}`}
+                className="flex flex-col items-center group shrink-0 transition-all hover:scale-105"
               >
                 <div className="relative">
                   <div className={`w-20 h-20 lg:w-24 lg:h-24 rounded-full p-[2px] ${theme.primary}`}>
                     <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
                       {firstMedia?.type === 'video' ? (
-                        <video src={previewUrl} muted loop playsInline className="w-full h-full object-cover rounded-full" />
+                        <video
+                          src={previewUrl}
+                          muted
+                          loop
+                          playsInline
+                          className="w-full h-full object-cover rounded-full"
+                        />
                       ) : (
-                        <img src={previewUrl} alt={story.title} className="w-full h-full object-cover rounded-full" />
+                        <img
+                          src={previewUrl}
+                          alt={story.title}
+                          className="w-full h-full object-cover rounded-full"
+                        />
                       )}
                       <div className="absolute bottom-1 left-1 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center">
                         {getMediaIcon(firstMedia?.type, true)}
                       </div>
                     </div>
                     {mediaCount > 1 && (
-                      <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ${theme.badge} text-white flex items-center justify-center border-2 border-white`}>
+                      <div
+                        className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ${theme.badge} text-white flex items-center justify-center border-2 border-white`}
+                      >
                         +{mediaCount}
                       </div>
                     )}
@@ -101,14 +113,10 @@ export default function ModernStoriesGrid() {
                 <p className={`mt-3 text-sm font-semibold ${theme.text} group-hover:${theme.accent}`}>
                   {story.title}
                 </p>
-              </div>
+              </Link>
             );
           })}
         </div>
-
-        {selectedStory && (
-          <StoryViewer story={selectedStory} onClose={() => setSelectedStory(null)} />
-        )}
       </div>
     </section>
   );
