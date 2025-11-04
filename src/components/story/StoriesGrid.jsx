@@ -39,12 +39,19 @@ export default function ModernStoriesGrid() {
   };
 
   return (
-    <section className={`py-12 lg:py-16 ${theme.secondary} transition-colors duration-300`}>
+    <section className={`py-12 ${theme.secondary} transition-colors duration-300`}>
       <div className="container mx-auto px-4 max-w-7xl relative">
-        <div className="text-center mb-10 lg:mb-12 mt-24">
-          <h2 className={`text-3xl lg:text-5xl font-bold ${theme.text} mb-3`}>Latest Stories</h2>
-          <p className="text-base lg:text-lg text-gray-600 max-w-2xl mx-auto">
-            Discover recent updates, project milestones, and exclusive insights
+        <div className="text-center mb-10 lg:mb-12 pt-16">
+          <h2
+            className={`text-3xl lg:text-5xl font-extrabold ${theme.text} mb-3 tracking-tight`}
+          >
+            <span className="relative inline-block">
+              <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 blur-lg opacity-30"></span>
+              <span className="relative">Our Creative Highlights</span>
+            </span>
+          </h2>
+          <p className="text-base lg:text-lg text-gray-600 max-w-md mx-auto italic">
+            Quick glimpses of our design energy and innovation.
           </p>
         </div>
 
@@ -53,13 +60,13 @@ export default function ModernStoriesGrid() {
           <>
             <button
               onClick={() => scroll('left')}
-              className={`absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 ${theme.button} text-white rounded-full shadow-lg p-3 hidden sm:flex`}
+              className={`absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 ${theme.button} text-white rounded-full shadow-lg p-3 hidden sm:flex hover:scale-110 transition-transform`}
             >
               <ChevronLeft size={24} />
             </button>
             <button
               onClick={() => scroll('right')}
-              className={`absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 ${theme.button} text-white rounded-full shadow-lg p-3 hidden sm:flex`}
+              className={`absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 ${theme.button} text-white rounded-full shadow-lg p-3 hidden sm:flex hover:scale-110 transition-transform`}
             >
               <ChevronRight size={24} />
             </button>

@@ -1,6 +1,6 @@
 import "./globals.css";
 import { ThemeProvider } from '@/components/home/ThemeContext';
-import ClientLayout from './ClientLayout'; // ✅ import client wrapper
+import ClientLayout from './clientlayout'; // ✅ import client wrapper
 
 export const metadata = {
   title: {
