@@ -18,7 +18,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeNav, setActiveNav] = useState('');
 
-  // ✅ Theme context
+  // Theme context
   const { currentTheme, setCurrentTheme, theme } = useTheme();
 
   const navItems = [
@@ -29,15 +29,15 @@ const Header = () => {
     { name: 'Contact', href: '/contact', icon: <Mail className="w-4 h-4 lg:w-5 lg:h-5" /> },
   ];
 
-  // ✅ Handle scroll
+  // Handle scroll
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // ✅ Cycle through themes
-  const themes = ['modern', 'professional', 'vibrant', 'nature'];
+  // Cycle through Twitter themes: default, dark, dim
+  const themes = ['default', 'dark', 'dim'];
   const handleThemeToggle = () => {
     const nextIndex = (themes.indexOf(currentTheme) + 1) % themes.length;
     setCurrentTheme(themes[nextIndex]);
@@ -47,19 +47,15 @@ const Header = () => {
     <>
       {/* Top Header */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          theme.header.bg
-        } ${isScrolled ? 'shadow-md' : 'shadow-none'}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${theme.header.bg} ${
+          isScrolled ? 'shadow-md' : 'shadow-none'
+        }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4 lg:py-5">
 
             {/* Logo */}
-            <Link
-              href="/"
-              className="flex items-center flex-shrink-0 group"
-              onMouseEnter={() => setActiveNav('')}
-            >
+            <Link href="/" className="flex items-center flex-shrink-0 group" onMouseEnter={() => setActiveNav('')}>
               <div className="relative w-36 h-8 lg:w-44 lg:h-10 transition-transform duration-300 group-hover:scale-[1.03] group-hover:opacity-90">
                 <Image
                   src="/images/Stackbiite-logo.png"
@@ -79,17 +75,15 @@ const Header = () => {
                   href={item.href}
                   className={`flex items-center space-x-2 px-5 py-3 font-medium transition-all duration-300 relative group rounded-xl hover:rounded-2xl ${
                     activeNav === item.name
-                      ? `${theme.header.text} bg-opacity-10`
-                      : `${theme.header.text} ${theme.header.hover}`
+                      ? `${theme.accent} bg-opacity-10`
+                      : `${theme.text} ${theme.header.hover}`
                   }`}
                   onMouseEnter={() => setActiveNav(item.name)}
                   onMouseLeave={() => setActiveNav('')}
                 >
                   <span
                     className={`transition-transform duration-300 group-hover:scale-110 ${
-                      activeNav === item.name
-                        ? theme.accent
-                        : `${theme.header.text} opacity-70`
+                      activeNav === item.name ? theme.accent : `${theme.text} opacity-70`
                     }`}
                   >
                     {item.icon}
@@ -99,9 +93,7 @@ const Header = () => {
                   {/* Active underline */}
                   <div
                     className={`absolute bottom-0 left-0 right-0 h-[2px] ${theme.badge} rounded-full transition-all duration-300 origin-center ${
-                      activeNav === item.name
-                        ? 'scale-x-100'
-                        : 'scale-x-0 group-hover:scale-x-100'
+                      activeNav === item.name ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
                     }`}
                   ></div>
                 </Link>
@@ -114,9 +106,9 @@ const Header = () => {
               <button
                 onClick={handleThemeToggle}
                 title="Change Theme"
-                className={`p-3 rounded-full text-white shadow-md transition-all duration-300 active:scale-95 ${theme.button}`}
+                className={`p-3 rounded-full shadow-md transition-all duration-300 active:scale-95 ${theme.button}`}
               >
-                <Palette className="w-4 h-4" />
+                <Palette className="w-4 h-4 text-white" />
               </button>
 
               {/* Desktop CTA */}
@@ -136,7 +128,7 @@ const Header = () => {
 
       {/* Bottom Navigation (Mobile) */}
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden ${theme.header.bg} backdrop-blur-xl border-t border-gray-200`}
+        className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden ${theme.header.bg} backdrop-blur-xl border-t border-gray-600`}
       >
         <div className="max-w-7xl mx-auto px-2">
           <div className="flex justify-between items-center py-2">
@@ -147,20 +139,18 @@ const Header = () => {
                 className={`flex flex-col items-center space-y-1 flex-1 py-2 rounded-xl transition-all duration-300 active:scale-95 ${
                   activeNav === item.name
                     ? `${theme.accent} bg-opacity-10`
-                    : `${theme.header.text} opacity-80`
+                    : `${theme.text} opacity-80`
                 }`}
                 onClick={() => setActiveNav(item.name)}
               >
                 <div
                   className={`p-2 rounded-lg transition-transform duration-300 group-hover:scale-110 ${
-                    activeNav === item.name ? theme.accent : theme.header.text
+                    activeNav === item.name ? theme.accent : theme.text
                   }`}
                 >
                   {item.icon}
                 </div>
-                <span className="text-xs font-medium tracking-tight">
-                  {item.name}
-                </span>
+                <span className="text-xs font-medium tracking-tight">{item.name}</span>
                 <div
                   className={`w-1 h-1 ${theme.badge} rounded-full transition-all duration-300 ${
                     activeNav === item.name ? 'scale-100' : 'scale-0'

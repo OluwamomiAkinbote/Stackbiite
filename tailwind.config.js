@@ -21,7 +21,7 @@ module.exports = {
           600: '#e02424',
           700: '#c81e1e',
           800: '#9b1c1c',
-          900: '#800000', // This is standard maroon
+          900: '#800000',
           950: '#450a0a',
         },
       },
@@ -33,6 +33,9 @@ module.exports = {
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out',
         'slide-up': 'slideUp 0.3s ease-out',
+        'gradient-default': 'gradientDefault 10s ease infinite',
+        'gradient-dark': 'gradientDark 12s ease infinite',
+        'gradient-dim': 'gradientDim 15s ease infinite',
       },
       keyframes: {
         fadeIn: {
@@ -43,10 +46,25 @@ module.exports = {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        gradientDefault: {
+          '0%, 100%': { 'background-position': '0% 50%' },
+          '50%': { 'background-position': '100% 50%' },
+        },
+        gradientDark: {
+          '0%, 100%': { 'background-position': '50% 0%' },
+          '50%': { 'background-position': '50% 100%' },
+        },
+        gradientDim: {
+          '0%, 100%': { 'background-position': '0% 0%' },
+          '50%': { 'background-position': '100% 100%' },
+        },
+      },
+      backgroundSize: {
+        '200%': '200% 200%',
       },
       spacing: {
         '18': '4.5rem',
-      }
+      },
     },
   },
   plugins: [],

@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Play, Image } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Image as ImageIcon } from 'lucide-react';
 import { useTheme } from '@/components/home/ThemeContext';
 import { storiesWithPreview } from '@/components/story/StoriesData';
 
@@ -31,26 +31,19 @@ export default function ModernStoriesGrid() {
 
   const getMediaIcon = (mediaType, isFirst) => {
     if (!isFirst) return null;
-    return mediaType === 'video' ? (
-      <Play size={12} className="text-white" />
-    ) : (
-      <Image size={12} className="text-white" />
-    );
+    return mediaType === 'video' ? <Play size={12} className="text-white" /> : <ImageIcon size={12} className="text-white" />;
   };
 
   return (
-    <section className={`py-12 ${theme.secondary} transition-colors duration-300`}>
+    <section className={`py-12 transition-colors duration-300 ${theme.secondary}`}>
       <div className="container mx-auto px-4 max-w-7xl relative">
         <div className="text-center mb-10 lg:mb-12 pt-16">
-          <h2
-            className={`text-3xl lg:text-5xl font-extrabold ${theme.text} mb-3 tracking-tight`}
-          >
+          <h2 className={`text-3xl lg:text-5xl font-extrabold ${theme.text} mb-3 tracking-tight`}>
             <span className="relative inline-block">
-              <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 blur-lg opacity-30"></span>
-              <span className="relative">Our Creative Highlights</span>
+              <span className="relative">{`Our Creative Highlights`}</span>
             </span>
           </h2>
-          <p className="text-base lg:text-lg text-gray-600 max-w-md mx-auto italic">
+          <p className={`text-base lg:text-lg max-w-md mx-auto italic ${theme.text}`}>
             Quick glimpses of our design energy and innovation.
           </p>
         </div>
@@ -88,7 +81,7 @@ export default function ModernStoriesGrid() {
               >
                 <div className="relative">
                   <div className={`w-20 h-20 lg:w-24 lg:h-24 rounded-full p-[2px] ${theme.primary}`}>
-                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+                    <div className="w-full h-full rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
                       {firstMedia?.type === 'video' ? (
                         <video
                           src={previewUrl}
