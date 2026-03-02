@@ -5,13 +5,14 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
-        pathname: '/**', // allow all paths
+        pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'unsplash.com', // exact hostname, no wildcard
+        hostname: 'plus.unsplash.com', // Unsplash's premium images
         pathname: '/**',
       },
+      // Remove unsplash.com if you don't need to display images from the website
     ],
   },
 };
