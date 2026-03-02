@@ -1,15 +1,13 @@
 // app/page.js
-import StoriesGrid from '../story/StoriesGrid';
-import Header from '../header/Header';
 import HeroSection from './HeroSection';
+import StoryIndex from '../stories/index';
 
 
 export default function Home() {
   return (
-    <main>
-      <StoriesGrid />
+    <main className='-24'>
+      <StoryIndex />
       <HeroSection />
-      <Header />
     </main>
   );
 }
