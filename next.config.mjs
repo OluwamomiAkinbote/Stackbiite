@@ -5,13 +5,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
+        pathname: '/**', // allow all paths
       },
       {
         protocol: 'https',
-        hostname: 'unsplash.com', // no wildcard
-        port: '',
+        hostname: 'unsplash.com', // exact hostname, no wildcard
         pathname: '/**',
       },
     ],
