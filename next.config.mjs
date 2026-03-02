@@ -10,7 +10,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '*.unsplash.com',
+        hostname: 'unsplash.com', // no wildcard
         port: '',
         pathname: '/**',
       },
@@ -18,4 +18,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig; // Use export default instead of module.exports
+export default nextConfig;
